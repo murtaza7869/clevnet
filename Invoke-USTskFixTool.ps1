@@ -12,7 +12,7 @@
 # -------------------------------------------------------------------------
 # CONFIGURATION
 # -------------------------------------------------------------------------
-$DownloadURL  = "https://www.dropbox.com/scl/fi/ovl51ehuex48n39p71m1k/USTskFixTool_1.0.2111.4.zip?download=1"
+$DownloadURL  = "https://www.dropbox.com/scl/fi/ovl51ehuex48n39p71m1k/USTskFixTool_1.0.2111.4.zip?rlkey=tkdgsav7h92efcp1vrc5uconv&st=08qr7wmc&dl=1"
 $WorkDir      = "C:\Windows\Temp"
 $ZipPath      = Join-Path $WorkDir "USTskFixTool.zip"
 $ExeName      = "USTskFixTool.exe"
