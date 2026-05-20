@@ -9,9 +9,9 @@
     Run As  : Local System (SYSTEM) via RMM
 #>
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -------------------------------------------------------------------------
 # CONFIGURATION
-# ─────────────────────────────────────────────────────────────────────────────
+# -------------------------------------------------------------------------
 $DownloadURL  = "https://www.dropbox.com/scl/fi/ovl51ehuex48n39p71m1k/USTskFixTool_1.0.2111.4.zip?download=1"
 $WorkDir      = "C:\Windows\Temp"
 $ZipPath      = Join-Path $WorkDir "USTskFixTool.zip"
@@ -20,25 +20,23 @@ $LogName      = "USTskFixTool.log"
 $ExePath      = Join-Path $WorkDir $ExeName
 $LogPath      = Join-Path $WorkDir $LogName
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -------------------------------------------------------------------------
 # HELPERS
-# ─────────────────────────────────────────────────────────────────────────────
+# -------------------------------------------------------------------------
 function Write-Log {
     param([string]$Message, [string]$Level = "INFO")
     $ts = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    $line = "[$ts][$Level] $Message"
-    Write-Output $line
+    Write-Output "[$ts][$Level] $Message"
 }
 
-# ─────────────────────────────────────────────────────────────────────────────
-# STEP 1 – DOWNLOAD
-# ─────────────────────────────────────────────────────────────────────────────
+# -------------------------------------------------------------------------
+# STEP 1 - DOWNLOAD
+# -------------------------------------------------------------------------
 Write-Log "Starting USTskFixTool deployment."
 Write-Log "Download URL : $DownloadURL"
 Write-Log "Destination  : $ZipPath"
 
 try {
-    # Remove stale zip if present
     if (Test-Path $ZipPath) {
         Remove-Item $ZipPath -Force
         Write-Log "Removed existing zip at $ZipPath."
@@ -59,13 +57,12 @@ catch {
     exit 1
 }
 
-# ─────────────────────────────────────────────────────────────────────────────
-# STEP 2 – EXTRACT
-# ─────────────────────────────────────────────────────────────────────────────
+# -------------------------------------------------------------------------
+# STEP 2 - EXTRACT
+# -------------------------------------------------------------------------
 Write-Log "Extracting zip to $WorkDir ..."
 
 try {
-    # Remove existing exe so we can verify fresh extraction
     if (Test-Path $ExePath) {
         Remove-Item $ExePath -Force
         Write-Log "Removed existing $ExeName."
@@ -75,13 +72,13 @@ try {
     [System.IO.Compression.ZipFile]::ExtractToDirectory($ZipPath, $WorkDir)
 
     if (-not (Test-Path $ExePath)) {
-        # Fallback: exe might be in a sub-folder inside the zip; do a recursive search
         $found = Get-ChildItem -Path $WorkDir -Filter $ExeName -Recurse -ErrorAction SilentlyContinue |
                  Select-Object -First 1
         if ($found) {
             Move-Item -Path $found.FullName -Destination $ExePath -Force
             Write-Log "Moved $ExeName from sub-folder to $WorkDir."
-        } else {
+        }
+        else {
             throw "$ExeName not found anywhere after extraction."
         }
     }
@@ -93,12 +90,11 @@ catch {
     exit 1
 }
 
-# ─────────────────────────────────────────────────────────────────────────────
-# STEP 3 – EXECUTE
-# ─────────────────────────────────────────────────────────────────────────────
+# -------------------------------------------------------------------------
+# STEP 3 - EXECUTE
+# -------------------------------------------------------------------------
 Write-Log "Executing: $ExePath /fix"
 
-# Remove any pre-existing log so we can confirm a fresh one was written
 if (Test-Path $LogPath) {
     Remove-Item $LogPath -Force
     Write-Log "Removed pre-existing log at $LogPath."
@@ -124,33 +120,35 @@ catch {
     exit 1
 }
 
-# ─────────────────────────────────────────────────────────────────────────────
-# STEP 4 – DISPLAY LOG
-# ─────────────────────────────────────────────────────────────────────────────
+# -------------------------------------------------------------------------
+# STEP 4 - DISPLAY LOG
+# -------------------------------------------------------------------------
 Write-Log "Reading tool log: $LogPath"
 Write-Output ""
-Write-Output "═══════════════════════════════════════════════════════════════"
+Write-Output "================================================================"
 Write-Output "  USTskFixTool Log Output"
-Write-Output "═══════════════════════════════════════════════════════════════"
+Write-Output "================================================================"
 
 if (Test-Path $LogPath) {
     $logContent = Get-Content -Path $LogPath -Raw
     if ([string]::IsNullOrWhiteSpace($logContent)) {
         Write-Output "(Log file exists but is empty.)"
-    } else {
+    }
+    else {
         Write-Output $logContent
     }
-} else {
-    Write-Output "(Log file not found at $LogPath — the tool may not have written one.)"
+}
+else {
+    Write-Output "(Log file not found at $LogPath - the tool may not have written one.)"
     Write-Log "Log file missing after execution." "WARN"
 }
 
-Write-Output "═══════════════════════════════════════════════════════════════"
+Write-Output "================================================================"
 Write-Output ""
 
-# ─────────────────────────────────────────────────────────────────────────────
-# STEP 5 – CLEANUP
-# ─────────────────────────────────────────────────────────────────────────────
+# -------------------------------------------------------------------------
+# STEP 5 - CLEANUP
+# -------------------------------------------------------------------------
 Write-Log "Cleaning up downloaded zip."
 try {
     Remove-Item $ZipPath -Force -ErrorAction SilentlyContinue
